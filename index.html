@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>成大人の美食地圖</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>🍜 成大人の美食推薦</h1>
+
+  <div class="restaurant" data-id="hoya">
+    <h2>賀也拉麵</h2>
+    <p>📍 地址：台南市東區育樂街210號</p>
+    <p>🕒 營業時間：11:00~13:30 17:00~20:20 (週二公休)</p>
+    <p>🌟 推薦餐點：雞白湯拉麵</p>
+    <a href="https://maps.app.goo.gl/pFn6hEho9UKfgunx8" target="_blank">查看地圖</a>
+    <button class="like-btn">👍 推 <span class="like-count">0</span></button>
+    <button class="dislike-btn">👎 不推 <span class="dislike-count">0</span></button>
+  </div>
+
+  <div class="restaurant" data-id="yuanwei">
+    <h2>原味屋</h2>
+    <p>📍 地址：台南市東區勝利路</p>
+    <p>🕒 營業時間：11:00~14:00 17:00~20:00 (週日公休)</p>
+    <p>🌟 推薦餐點：炸豬排定食、漢堡排</p>
+    <a href="https://maps.app.goo.gl/YdWjQMrTEXzNoiCUA" target="_blank">查看地圖</a>
+    <button class="like-btn">👍 推 <span class="like-count">0</span></button>
+    <button class="dislike-btn">👎 不推 <span class="dislike-count">0</span></button>
+  </div>
+
+  <div class="restaurant" data-id="shengli">
+    <h2>勝利早點</h2>
+    <p>📍 地址：台南市東區勝利路119號</p>
+    <p>🕒 營業時間：16:00 ~ 04:00 (週一公休)</p>
+    <p>🌟 推薦餐點：蔥餅、豆漿</p>
+    <a href="https://maps.app.goo.gl/LoDpRvC3kkDigi166" target="_blank">查看地圖</a>
+    <button class="like-btn">👍 推 <span class="like-count">0</span></button>
+    <button class="dislike-btn">👎 不推 <span class="dislike-count">0</span></button>
+  </div>
+
+  <!-- 載入 Firebase CDN -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+
+  <script>
+    // 1. 初始化 Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyA-8tDGNQ1j868OFNLHTBrQ2uh4IaI0F40",
+      authDomain: "ncku-food-map.firebaseapp.com",
+      databaseURL: "https://ncku-food-map-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "ncku-food-map",
+      storageBucket: "ncku-food-map.firebasedatabase.app",
+      messagingSenderId: "339570174998",
+      appId: "1:339570174998:web:9876041b23d74fdf36d937"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // 2. 針對每個餐廳區塊，綁定讀寫
+    document.querySelectorAll('.restaurant').forEach(rest => {
+      const id = rest.dataset.id;
+      const likeCountEl = rest.querySelector('.like-count');
+      const dislikeCountEl = rest.querySelector('.dislike-count');
+      const likeBtn = rest.querySelector('.like-btn');
+      const dislikeBtn = rest.querySelector('.dislike-btn');
+
+      // 2.1 讀取雲端資料並初始化數字
+      db.ref(`restaurants/${id}`).once('value')
+        .then(snapshot => {
+          const data = snapshot.val() || { likes: 0, dislikes: 0 };
+          likeCountEl.textContent = data.likes;
+          dislikeCountEl.textContent = data.dislikes;
+        });
+
+      // 2.2 點擊「推」
+      likeBtn.addEventListener('click', () => {
+        // 先從畫面上拿到最新數字
+        let curr = parseInt(likeCountEl.textContent) || 0;
+        curr++;
+        likeCountEl.textContent = curr;
+        // 寫回 Firebase
+        db.ref(`restaurants/${id}/likes`).set(curr);
+      });
+
+      // 2.3 點擊「不推」
+      dislikeBtn.addEventListener('click', () => {
+        let curr = parseInt(dislikeCountEl.textContent) || 0;
+        curr++;
+        dislikeCountEl.textContent = curr;
+        db.ref(`restaurants/${id}/dislikes`).set(curr);
+      });
+    });
+  </script>
+</body>
+</html>

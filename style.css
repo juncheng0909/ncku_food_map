@@ -1,0 +1,74 @@
+body {
+  font-family: "Noto Sans TC", sans-serif;
+  background-image: url("images/food.jpg"); /* 美食風景圖片 */
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-color: rgba(0, 0, 0, 0.3);
+  color: #333;
+  padding: 30px;
+  max-width: 700px;
+  margin: auto;
+  backdrop-filter: brightness(0.9); /* 可選，暗一點讓文字更清楚 */
+}
+
+
+h1 {
+  text-align: center;
+  color: #c0392b;
+}
+
+.restaurant {
+  background-color: rgba(255, 255, 255, 0.85); /* 半透明白 */
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 20px;
+  margin: 20px 0;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+
+.restaurant h2 {
+  color: #2c3e50;
+}
+
+.restaurant p {
+  margin: 5px 0;
+}
+
+.restaurant a {
+  display: inline-block;
+  margin-top: 10px;
+  background-color: #e67e22;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  text-decoration: none;
+}
+
+.restaurant a:hover {
+  background-color: #d35400;
+}
+
+button.like-btn, button.dislike-btn {
+  background-color: #3498db;
+  border: none;
+  color: white;
+  padding: 6px 12px;
+  margin-right: 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+button.dislike-btn {
+  background-color: #e74c3c;
+}
+
+button.like-btn:hover {
+  background-color: #2980b9;
+}
+
+button.dislike-btn:hover {
+  background-color: #c0392b;
+}
