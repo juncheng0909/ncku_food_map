@@ -7,18 +7,23 @@
 </head>
 <body>
   <h1>成大人の美食推薦</h1>
-
-  <!-- 餐廳列表將會由 JavaScript 動態生成於此 -->
+  <div class="sort-container">
+    <span>排序方式：</span>
+    <button id="sort-by-likes-btn" class="sort-btn active">👍 依推薦數</button>
+    <button id="sort-by-default-btn" class="sort-btn">🏠 預設排序</button>
+  </div>
+  <!-- 餐廳列表 (用JavaScript動態生成於此) -->
   <div id="restaurant-list"></div>
 
-  <!-- 右側工具列 -->
+  <!-- 右邊的工具列 -->
   <div class="toolbar">
+    <button id="random-pick-btn">🤔晚餐吃什麼?</button>
     <button id="search-btn">🔍 搜尋餐廳</button>
     <button id="add-btn">➕ 新增餐廳</button>
     <button id="dev-btn">👨‍💻 開發人員</button>
   </div>
 
-  <!-- 新增餐廳的彈出視窗 (Modal)，預設為隱藏 -->
+  <!-- 新增餐廳的彈出視窗，預設為隱藏 -->
   <div id="add-restaurant-modal" class="modal hidden">
     <div class="modal-content">
       <span class="close-btn">×</span>
@@ -38,11 +43,11 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 
-  <!-- 你的 JavaScript 程式碼 -->
+  <!-- JavaScript -->
   <script>
-    // 1. 初始化 Firebase
+    // 初始化 Firebase
     const firebaseConfig = {
-      apiKey: "AIzaSyA-8tDGNQ1j868OFNLHTBrQ2uh4IaI0F40", // 請使用你自己的金鑰
+      apiKey: "AIzaSyA-8tDGNQ1j868OFNLHTBrQ2uh4IaI0F40",
       authDomain: "ncku-food-map.firebaseapp.com",
       databaseURL: "https://ncku-food-map-default-rtdb.asia-southeast1.firebasedatabase.app",
       projectId: "ncku-food-map",
@@ -53,22 +58,51 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     const restaurantsRef = db.ref('restaurants');
-
     const restaurantList = document.getElementById('restaurant-list');
 
-    // 2. 從 Firebase 讀取資料並動態渲染畫面
-    // 使用 .on() 而不是 .once()，這樣當資料庫有任何變動（例如新增餐廳），畫面會自動更新
+    // 新增全域變數來儲存資料和當前排序狀態
+    let allRestaurantData = [];
+    let currentSortMethod = 'likes'; // 預設依推薦數排序
+
+    // 從 Firebase 讀取資料
     restaurantsRef.on('value', (snapshot) => {
-      restaurantList.innerHTML = ''; // 每次更新前先清空列表
       const restaurants = snapshot.val();
       if (restaurants) {
-        Object.entries(restaurants).forEach(([id, data]) => {
-          createRestaurantCard(id, data);
-        });
+        // 將物件轉為陣列並存到全域變數
+        allRestaurantData = Object.entries(restaurants);
+        // 呼叫新的排序與渲染函式
+        sortAndRender();
+      } else {
+        // 沒有資料的情況
+        allRestaurantData = [];
+        restaurantList.innerHTML = '<h2>目前還沒有任何餐廳資料喔！</h2>';
       }
     });
 
-    // 3. 創建單一餐廳卡片的函式
+    // 新增：用來排序和觸發渲染的函式(rendering)
+    function sortAndRender() {
+      // 複製一份陣列來排序，才不會動到原始資料順序
+      let sortedData = [...allRestaurantData];
+
+      if (currentSortMethod === 'likes') {
+        // 依推薦數 (likes) 降冪排序
+        sortedData.sort(([, a], [, b]) => (b.likes || 0) - (a.likes || 0));
+      }
+      // 如果 currentSortMethod 是 'default'，則不進行 sort，直接使用原始順序
+      
+      // 最後，呼叫渲染函式(rendering)
+      renderList(sortedData);
+    }
+    
+    // 新增：專門渲染列表的函式 (將原本的 forEach 邏輯搬移到這裡)
+    function renderList(restaurantArray) {
+        restaurantList.innerHTML = ''; // 清空列表
+        restaurantArray.forEach(([id, data]) => {
+            createRestaurantCard(id, data);
+        });
+    }
+
+    // 創建單一餐廳卡片的函式
     function createRestaurantCard(id, data) {
       const likes = data.likes || 0;
       const dislikes = data.dislikes || 0;
@@ -76,21 +110,21 @@
       const restaurantDiv = document.createElement('div');
       restaurantDiv.className = 'restaurant';
       restaurantDiv.dataset.id = id;
-      restaurantDiv.dataset.name = data.name.toLowerCase(); // 為了搜尋功能
+      // 如果沒有 name，給預設值避免出錯
+      restaurantDiv.dataset.name = (data.name || '').toLowerCase();
 
       restaurantDiv.innerHTML = `
-        <h2>${data.name}</h2>
-        <p>📍 地址：${data.address}</p>
-        <p>🕒 營業時間：${data.hours}</p>
-        <p>🌟 推薦餐點：${data.recommended}</p>
-        <a href="${data.mapLink}" target="_blank">查看地圖</a>
+        <h2>${data.name || '店名未提供'}</h2>
+        <p>📍 地址：${data.address || '地址未提供'}</p>
+        <p>🕒 營業時間：${data.hours || '時間未提供'}</p>
+        <p>🌟 推薦餐點：${data.recommended || '餐點未提供'}</p>
+        <a href="${data.mapLink || '#'}" target="_blank">查看地圖</a>
         <button class="like-btn">👍 推 <span class="like-count">${likes}</span></button>
         <button class="dislike-btn">👎 不推 <span class="dislike-count">${dislikes}</span></button>
       `;
       
       restaurantList.appendChild(restaurantDiv);
 
-      // 綁定事件監聽器 (必須在元素創建後綁定)
       const likeBtn = restaurantDiv.querySelector('.like-btn');
       const dislikeBtn = restaurantDiv.querySelector('.dislike-btn');
 
@@ -104,21 +138,39 @@
         restaurantsRef.child(id).update({ dislikes: newDislikes });
       });
     }
+    
+    // 新增：排序按鈕
+    const sortByLikesBtn = document.getElementById('sort-by-likes-btn');
+    const sortByDefaultBtn = document.getElementById('sort-by-default-btn');
 
-    // 4. 工具列功能
+    sortByLikesBtn.addEventListener('click', () => {
+      currentSortMethod = 'likes';
+      sortByLikesBtn.classList.add('active');
+      sortByDefaultBtn.classList.remove('active');
+      sortAndRender(); // 重新排序和渲染
+    });
+
+    sortByDefaultBtn.addEventListener('click', () => {
+      currentSortMethod = 'default';
+      sortByDefaultBtn.classList.add('active');
+      sortByLikesBtn.classList.remove('active');
+      sortAndRender(); // 重新排序和渲染
+    });
+
+
+    // 工具列功能
     const addBtn = document.getElementById('add-btn');
     const searchBtn = document.getElementById('search-btn');
     const devBtn = document.getElementById('dev-btn');
     const modal = document.getElementById('add-restaurant-modal');
     const closeModalBtn = document.querySelector('.close-btn');
     const addForm = document.getElementById('add-restaurant-form');
-
-    // 4.1 "新增餐廳" 按鈕
+    // "新增餐廳" 按鈕
     addBtn.addEventListener('click', () => {
       modal.classList.remove('hidden');
     });
 
-    // 4.2 關閉彈出視窗
+    // 關閉彈出視窗
     closeModalBtn.addEventListener('click', () => {
       modal.classList.add('hidden');
     });
@@ -128,10 +180,9 @@
       }
     });
 
-    // 4.3 處理表單提交
+    // 處理表單提交
     addForm.addEventListener('submit', (event) => {
-      event.preventDefault(); // 防止頁面重新載入
-      
+      event.preventDefault();
       const newRestaurantData = {
         name: addForm.elements.name.value,
         address: addForm.elements.address.value,
@@ -141,13 +192,11 @@
         likes: 0,
         dislikes: 0
       };
-
-      // 使用 push() 會自動生成一個唯一的 key，並將資料寫入
       restaurantsRef.push(newRestaurantData)
         .then(() => {
           alert('餐廳新增成功！');
-          addForm.reset(); // 清空表單
-          modal.classList.add('hidden'); // 關閉視窗
+          addForm.reset();
+          modal.classList.add('hidden');
         })
         .catch((error) => {
           console.error("新增失敗:", error);
@@ -155,27 +204,43 @@
         });
     });
     
-    // 4.4 "搜尋餐廳" 按鈕
+    // "搜尋餐廳" 按鈕
     searchBtn.addEventListener('click', () => {
         const keyword = prompt('請輸入餐廳名稱關鍵字：');
-        if (keyword === null) return; // 使用者按下取消
-
+        if (keyword === null) return;
         const allRestaurants = document.querySelectorAll('.restaurant');
         allRestaurants.forEach(card => {
-            // dataset.name 是我們在上面 createRestaurantCard 時存入的
             const restaurantName = card.dataset.name;
             if(restaurantName.includes(keyword.toLowerCase())) {
-                card.style.display = 'block'; // 顯示符合的
+                card.style.display = 'block';
             } else {
-                card.style.display = 'none'; // 隱藏不符合的
+                card.style.display = 'none';
             }
         });
     });
 
-    // 4.5 "開發人員" 按鈕
+    // "開發人員" 按鈕
     devBtn.addEventListener('click', () => {
-        alert('此網站蘇小白開發！');
+        alert('Developed by JunCheng 909\nIns : __jc909');
     });
-  </script>
+
+    // "隨機選一家" 功能
+    const randomPickBtn = document.getElementById('random-pick-btn');
+    randomPickBtn.addEventListener('click', () => {
+        const allRestaurants = document.querySelectorAll('div.restaurant:not([style*="display: none"])');
+        if (allRestaurants.length === 0) {
+            alert('目前沒有餐廳可以選擇喔！');
+            return;
+        }
+        allRestaurants.forEach(card => card.classList.remove('highlighted'));
+        const randomIndex = Math.floor(Math.random() * allRestaurants.length);
+        const pickedRestaurant = allRestaurants[randomIndex];
+        pickedRestaurant.classList.add('highlighted');
+        pickedRestaurant.scrollIntoView({ 
+            behavior: 'smooth',
+            block: 'center'
+        });
+    });
+</script>
 </body>
 </html>

@@ -111,7 +111,7 @@ button.dislike-btn:hover {
     padding: 10px 15px;
     border: none;
     border-radius: 8px;
-    background-color: rgba(44, 62, 80, 0.8);
+    background-color: rgba(82, 102, 121, 0.8);
     color: white;
     cursor: pointer;
     box-shadow: 0 2px 5px rgba(0,0,0,0.2);
@@ -192,4 +192,52 @@ button.dislike-btn:hover {
 
 #add-restaurant-form button:hover {
     background-color: #27ae60;
+}
+
+/* --- 隨機選中餐廳的樣式 --- */
+.restaurant.highlighted {
+    transform: scale(1.05) translateY(-5px); /* 放大並稍微上移 */
+    box-shadow: 0 8px 30px rgba(240, 191, 67, 0.8); /* 加上黃色的光暈效果 */
+    border: 2px solid #f0bf43; /* 加上黃色邊框 */
+    transition: all 0.3s ease-in-out; /* 讓變化更平滑 */
+}
+
+/* --- 排序按鈕容器樣式 --- */
+.sort-container {
+    text-align: center; /* 置中 */
+    margin-bottom: 20px;
+    background-color: rgba(255, 255, 255, 0.2); /* 淡淡的背景 */
+    padding: 10px;
+    border-radius: 8px;
+}
+
+.sort-container span {
+    color: white;
+    font-weight: bold;
+    margin-right: 10px;
+}
+
+/* 排序按鈕樣式 */
+.sort-btn {
+    border: 1px solid #fff;
+    background-color: transparent;
+    color: #fff;
+    padding: 8px 15px;
+    border-radius: 20px;
+    cursor: pointer;
+    margin: 0 5px;
+    transition: all 0.2s ease;
+}
+
+/* 滑鼠懸浮時的樣式 */
+.sort-btn:hover {
+    background-color: rgba(255, 255, 255, 0.3);
+}
+
+/* 當前啟用的排序按鈕樣式 */
+.sort-btn.active {
+    background-color: #f0bf43; /* 使用主題黃色 */
+    border-color: #f0bf43;
+    color: #333;
+    font-weight: bold;
 }
