@@ -6,89 +6,175 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>🍜 成大人の美食推薦</h1>
+  <h1>成大人の美食推薦</h1>
 
-  <div class="restaurant" data-id="hoya">
-    <h2>賀也拉麵</h2>
-    <p>📍 地址：台南市東區育樂街210號</p>
-    <p>🕒 營業時間：11:00~13:30 17:00~20:20 (週二公休)</p>
-    <p>🌟 推薦餐點：雞白湯拉麵</p>
-    <a href="https://maps.app.goo.gl/pFn6hEho9UKfgunx8" target="_blank">查看地圖</a>
-    <button class="like-btn">👍 推 <span class="like-count">0</span></button>
-    <button class="dislike-btn">👎 不推 <span class="dislike-count">0</span></button>
+  <!-- 餐廳列表將會由 JavaScript 動態生成於此 -->
+  <div id="restaurant-list"></div>
+
+  <!-- 右側工具列 -->
+  <div class="toolbar">
+    <button id="search-btn">🔍 搜尋餐廳</button>
+    <button id="add-btn">➕ 新增餐廳</button>
+    <button id="dev-btn">👨‍💻 開發人員</button>
   </div>
 
-  <div class="restaurant" data-id="yuanwei">
-    <h2>原味屋</h2>
-    <p>📍 地址：台南市東區勝利路</p>
-    <p>🕒 營業時間：11:00~14:00 17:00~20:00 (週日公休)</p>
-    <p>🌟 推薦餐點：炸豬排定食、漢堡排</p>
-    <a href="https://maps.app.goo.gl/YdWjQMrTEXzNoiCUA" target="_blank">查看地圖</a>
-    <button class="like-btn">👍 推 <span class="like-count">0</span></button>
-    <button class="dislike-btn">👎 不推 <span class="dislike-count">0</span></button>
-  </div>
-
-  <div class="restaurant" data-id="shengli">
-    <h2>勝利早點</h2>
-    <p>📍 地址：台南市東區勝利路119號</p>
-    <p>🕒 營業時間：16:00 ~ 04:00 (週一公休)</p>
-    <p>🌟 推薦餐點：蔥餅、豆漿</p>
-    <a href="https://maps.app.goo.gl/LoDpRvC3kkDigi166" target="_blank">查看地圖</a>
-    <button class="like-btn">👍 推 <span class="like-count">0</span></button>
-    <button class="dislike-btn">👎 不推 <span class="dislike-count">0</span></button>
+  <!-- 新增餐廳的彈出視窗 (Modal)，預設為隱藏 -->
+  <div id="add-restaurant-modal" class="modal hidden">
+    <div class="modal-content">
+      <span class="close-btn">×</span>
+      <h2>新增美食推薦</h2>
+      <form id="add-restaurant-form">
+        <input type="text" name="name" placeholder="餐廳名稱" required>
+        <input type="text" name="address" placeholder="地址" required>
+        <input type="text" name="hours" placeholder="營業時間" required>
+        <input type="text" name="recommended" placeholder="推薦餐點" required>
+        <input type="url" name="mapLink" placeholder="Google Maps 連結" required>
+        <button type="submit">確認新增</button>
+      </form>
+    </div>
   </div>
 
   <!-- 載入 Firebase CDN -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 
+  <!-- 你的 JavaScript 程式碼 -->
   <script>
     // 1. 初始化 Firebase
     const firebaseConfig = {
-      apiKey: "AIzaSyA-8tDGNQ1j868OFNLHTBrQ2uh4IaI0F40",
+      apiKey: "AIzaSyA-8tDGNQ1j868OFNLHTBrQ2uh4IaI0F40", // 請使用你自己的金鑰
       authDomain: "ncku-food-map.firebaseapp.com",
       databaseURL: "https://ncku-food-map-default-rtdb.asia-southeast1.firebasedatabase.app",
       projectId: "ncku-food-map",
-      storageBucket: "ncku-food-map.firebasedatabase.app",
+      storageBucket: "ncku-food-map.firebasestorage.app",
       messagingSenderId: "339570174998",
       appId: "1:339570174998:web:9876041b23d74fdf36d937"
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
+    const restaurantsRef = db.ref('restaurants');
 
-    // 2. 針對每個餐廳區塊，綁定讀寫
-    document.querySelectorAll('.restaurant').forEach(rest => {
-      const id = rest.dataset.id;
-      const likeCountEl = rest.querySelector('.like-count');
-      const dislikeCountEl = rest.querySelector('.dislike-count');
-      const likeBtn = rest.querySelector('.like-btn');
-      const dislikeBtn = rest.querySelector('.dislike-btn');
+    const restaurantList = document.getElementById('restaurant-list');
 
-      // 2.1 讀取雲端資料並初始化數字
-      db.ref(`restaurants/${id}`).once('value')
-        .then(snapshot => {
-          const data = snapshot.val() || { likes: 0, dislikes: 0 };
-          likeCountEl.textContent = data.likes;
-          dislikeCountEl.textContent = data.dislikes;
+    // 2. 從 Firebase 讀取資料並動態渲染畫面
+    // 使用 .on() 而不是 .once()，這樣當資料庫有任何變動（例如新增餐廳），畫面會自動更新
+    restaurantsRef.on('value', (snapshot) => {
+      restaurantList.innerHTML = ''; // 每次更新前先清空列表
+      const restaurants = snapshot.val();
+      if (restaurants) {
+        Object.entries(restaurants).forEach(([id, data]) => {
+          createRestaurantCard(id, data);
         });
+      }
+    });
 
-      // 2.2 點擊「推」
+    // 3. 創建單一餐廳卡片的函式
+    function createRestaurantCard(id, data) {
+      const likes = data.likes || 0;
+      const dislikes = data.dislikes || 0;
+
+      const restaurantDiv = document.createElement('div');
+      restaurantDiv.className = 'restaurant';
+      restaurantDiv.dataset.id = id;
+      restaurantDiv.dataset.name = data.name.toLowerCase(); // 為了搜尋功能
+
+      restaurantDiv.innerHTML = `
+        <h2>${data.name}</h2>
+        <p>📍 地址：${data.address}</p>
+        <p>🕒 營業時間：${data.hours}</p>
+        <p>🌟 推薦餐點：${data.recommended}</p>
+        <a href="${data.mapLink}" target="_blank">查看地圖</a>
+        <button class="like-btn">👍 推 <span class="like-count">${likes}</span></button>
+        <button class="dislike-btn">👎 不推 <span class="dislike-count">${dislikes}</span></button>
+      `;
+      
+      restaurantList.appendChild(restaurantDiv);
+
+      // 綁定事件監聽器 (必須在元素創建後綁定)
+      const likeBtn = restaurantDiv.querySelector('.like-btn');
+      const dislikeBtn = restaurantDiv.querySelector('.dislike-btn');
+
       likeBtn.addEventListener('click', () => {
-        // 先從畫面上拿到最新數字
-        let curr = parseInt(likeCountEl.textContent) || 0;
-        curr++;
-        likeCountEl.textContent = curr;
-        // 寫回 Firebase
-        db.ref(`restaurants/${id}/likes`).set(curr);
+        const newLikes = likes + 1;
+        restaurantsRef.child(id).update({ likes: newLikes });
       });
 
-      // 2.3 點擊「不推」
       dislikeBtn.addEventListener('click', () => {
-        let curr = parseInt(dislikeCountEl.textContent) || 0;
-        curr++;
-        dislikeCountEl.textContent = curr;
-        db.ref(`restaurants/${id}/dislikes`).set(curr);
+        const newDislikes = dislikes + 1;
+        restaurantsRef.child(id).update({ dislikes: newDislikes });
       });
+    }
+
+    // 4. 工具列功能
+    const addBtn = document.getElementById('add-btn');
+    const searchBtn = document.getElementById('search-btn');
+    const devBtn = document.getElementById('dev-btn');
+    const modal = document.getElementById('add-restaurant-modal');
+    const closeModalBtn = document.querySelector('.close-btn');
+    const addForm = document.getElementById('add-restaurant-form');
+
+    // 4.1 "新增餐廳" 按鈕
+    addBtn.addEventListener('click', () => {
+      modal.classList.remove('hidden');
+    });
+
+    // 4.2 關閉彈出視窗
+    closeModalBtn.addEventListener('click', () => {
+      modal.classList.add('hidden');
+    });
+    window.addEventListener('click', (event) => {
+      if (event.target === modal) {
+        modal.classList.add('hidden');
+      }
+    });
+
+    // 4.3 處理表單提交
+    addForm.addEventListener('submit', (event) => {
+      event.preventDefault(); // 防止頁面重新載入
+      
+      const newRestaurantData = {
+        name: addForm.elements.name.value,
+        address: addForm.elements.address.value,
+        hours: addForm.elements.hours.value,
+        recommended: addForm.elements.recommended.value,
+        mapLink: addForm.elements.mapLink.value,
+        likes: 0,
+        dislikes: 0
+      };
+
+      // 使用 push() 會自動生成一個唯一的 key，並將資料寫入
+      restaurantsRef.push(newRestaurantData)
+        .then(() => {
+          alert('餐廳新增成功！');
+          addForm.reset(); // 清空表單
+          modal.classList.add('hidden'); // 關閉視窗
+        })
+        .catch((error) => {
+          console.error("新增失敗:", error);
+          alert('新增失敗，請稍後再試。');
+        });
+    });
+    
+    // 4.4 "搜尋餐廳" 按鈕
+    searchBtn.addEventListener('click', () => {
+        const keyword = prompt('請輸入餐廳名稱關鍵字：');
+        if (keyword === null) return; // 使用者按下取消
+
+        const allRestaurants = document.querySelectorAll('.restaurant');
+        allRestaurants.forEach(card => {
+            // dataset.name 是我們在上面 createRestaurantCard 時存入的
+            const restaurantName = card.dataset.name;
+            if(restaurantName.includes(keyword.toLowerCase())) {
+                card.style.display = 'block'; // 顯示符合的
+            } else {
+                card.style.display = 'none'; // 隱藏不符合的
+            }
+        });
+    });
+
+    // 4.5 "開發人員" 按鈕
+    devBtn.addEventListener('click', () => {
+        alert('此網站蘇小白開發！');
     });
   </script>
 </body>
