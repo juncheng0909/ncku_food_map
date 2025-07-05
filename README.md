@@ -51,6 +51,11 @@
 *   **後端與資料庫**：
     *   Firebase - Realtime Database
 
+## 🚀 公開網站 (Firebase Hosting)
+1.  **瀏覽器搜尋**：
+    ```bash
+    https://ncku-food-map.web.app/
+    ```
 ## 🚀 本地開發設定
 
 1.  **複製專案**：
