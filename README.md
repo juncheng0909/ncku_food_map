@@ -52,7 +52,8 @@
     *   Firebase - Realtime Database
 
 ## 🚀 公開網站 (Firebase Hosting)
-1.  **瀏覽器搜尋**：
+1.  **按下方連結**：
+    [成大人の美食推薦](https://ncku-food-map.web.app/)
     ```bash
     https://ncku-food-map.web.app/
     ```
