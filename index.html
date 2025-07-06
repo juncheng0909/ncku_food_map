@@ -12,10 +12,10 @@
     <button id="sort-by-likes-btn" class="sort-btn active">👍 依推薦數</button>
     <button id="sort-by-default-btn" class="sort-btn">🏠 預設排序</button>
   </div>
-  <!-- 餐廳列表 (用JavaScript動態生成於此) -->
+  <!-- 餐廳列表 -->
   <div id="restaurant-list"></div>
 
-  <!-- 右邊的工具列 -->
+  <!-- 右邊工具列 -->
   <div class="toolbar">
     <button id="random-pick-btn">🤔晚餐吃什麼?</button>
     <button id="search-btn">🔍 搜尋餐廳</button>
@@ -45,7 +45,7 @@
 
   <!-- JavaScript -->
   <script>
-    // 初始化 Firebase
+    // 初始化Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyA-8tDGNQ1j868OFNLHTBrQ2uh4IaI0F40",
       authDomain: "ncku-food-map.firebaseapp.com",
@@ -79,18 +79,18 @@
       }
     });
 
-    // 新增：用來排序和觸發渲染的函式(rendering)
+    // 新增用來排序和觸發渲染的函式
     function sortAndRender() {
       // 複製一份陣列來排序，才不會動到原始資料順序
       let sortedData = [...allRestaurantData];
 
       if (currentSortMethod === 'likes') {
-        // 依推薦數 (likes) 降冪排序
+        // 依推薦數 (likes) 排序
         sortedData.sort(([, a], [, b]) => (b.likes || 0) - (a.likes || 0));
       }
-      // 如果 currentSortMethod 是 'default'，則不進行 sort，直接使用原始順序
+      // 如果 currentSortMethod 是 default，則不sort，直接使用原始順序
       
-      // 最後，呼叫渲染函式(rendering)
+      // 呼叫渲染函式(rendering)
       renderList(sortedData);
     }
     
